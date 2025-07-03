@@ -1,0 +1,51 @@
+# please use clang-format version 16 or later
+BasedOnStyle: Google
+AccessModifierOffset: -1
+AlignAfterOpenBracket: BlockIndent
+AlignOperands: AlignAfterOperator
+AlignTrailingComments:
+  Kind: Never
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: Inline
+AllowShortLoopsOnASingleLine: false
+BinPackArguments: false
+BinPackParameters: false
+BraceWrapping:
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+BreakAfterAttributes: Never
+BreakBeforeConceptDeclarations: Always
+BreakConstructorInitializers: AfterColon
+BreakInheritanceList: AfterColon
+BreakStringLiterals: false
+ColumnLimit: 150
+DerivePointerAlignment: false
+FixNamespaceComments: false
+ForEachMacros:
+  - "json_object_foreach"
+  - "json_object_foreach_safe"
+  - "json_array_foreach"
+  - "HASH_ITER"
+IncludeBlocks: Preserve
+IndentExternBlock: Indent
+IndentRequiresClause: false
+IndentWidth: 4
+InsertNewlineAtEOF: true
+KeepEmptyLinesAtTheStartOfBlocks: true
+LineEnding: LF
+NamespaceIndentation: All
+PackConstructorInitializers: CurrentLine
+PenaltyExcessCharacter: 100
+PenaltyReturnTypeOnItsOwnLine: 0
+QualifierAlignment: Right
+RequiresClausePosition: OwnLine
+RequiresExpressionIndentation: OuterScope
+SkipMacroDefinitionBody: true
+SpaceAfterCStyleCast: true
+SpacesBeforeTrailingComments: 2
+StatementMacros:
+  - "Q_OBJECT"
+TypenameMacros:
+  - "DARRAY"

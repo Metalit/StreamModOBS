@@ -1,0 +1,26 @@
+# Exclude everything
+/*
+
+# Except for default project files
+!/.github
+!/build-aux
+!/cmake
+!/data
+!/src
+!.clang-format
+!.gersemirc
+!.gitignore
+!buildspec.json
+!CMakeLists.txt
+!CMakePresets.json
+!LICENSE
+!README.md
+
+# Include protobuf source files
+!/protos
+
+# Exclude generated protobuf files
+src/protos
+
+# Exclude CMake build number cache
+/cmake/.CMakeBuildNumber
