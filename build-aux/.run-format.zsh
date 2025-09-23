@@ -135,50 +135,6 @@ invoke_formatter() {
         }
       }
       ;;
-    swift)
-      local formatter=swift-format
-      if (( ${+commands[swift-format]} )) {
-        local swift_format_version=$(swift-format --version)
-
-        if ! is-at-least 508.0.0 ${swift_format_version}; then
-          log_error "swift-format is not version 508.0.0 or above (found ${swift_format_version})."
-          exit 2
-        fi
-      } else {
-        log_error "No viable swift-format version found (required 508.0.0)"
-        exit 2
-      }
-
-      if (( ! #source_files )) source_files=(src/**/*.swift(.N))
-
-      check_files() {
-        local -i num_failures=0
-        local -a source_files=($@)
-        local file
-        local -a format_args=()
-
-        local -a command=(${formatter} ${format_args})
-
-        for file (${source_files}) {
-          if ! "${command}" "${file}" | diff -q "${file}" - &> /dev/null; then
-            log_error "${file} requires formatting changes."
-            if (( fail_on_error == 2 )) return 2;
-            num_failures=$(( num_failures + 1 ))
-          fi
-        }
-        if (( num_failures && fail_on_error == 1 )) return 2
-      }
-
-      format_files() {
-        local -a source_files=($@)
-
-        if (( ${#source_files} )) {
-          local -a format_args=(-i)
-
-          "${formatter}" ${format_args} ${source_files}
-        }
-      }
-      ;;
     *) log_error "Invalid formatter specified: ${1}. Valid options are clang-format, gersemi, and swift-format."; exit 2 ;;
   }
 
