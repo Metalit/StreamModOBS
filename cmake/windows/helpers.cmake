@@ -24,9 +24,6 @@ function(set_target_properties_plugin target)
 
   install(TARGETS ${target} RUNTIME DESTINATION "${target}/bin/64bit" LIBRARY DESTINATION "${target}/bin/64bit")
 
-  install(IMPORTED_RUNTIME_ARTIFACTS absl::abseil_dll DESTINATION "${target}/bin/64bit")
-  install(IMPORTED_RUNTIME_ARTIFACTS protobuf::libprotobuf DESTINATION "${target}/bin/64bit")
-
   install(
     FILES "$<TARGET_PDB_FILE:${target}>"
     CONFIGURATIONS RelWithDebInfo Debug Release

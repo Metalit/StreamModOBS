@@ -28,6 +28,10 @@ endif()
 
 add_compile_options(
   /W3
+  /wd4141
+  /wd4200
+  /wd4244
+  /wd4267
   /utf-8
   /Brepro
   /permissive-

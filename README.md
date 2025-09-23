@@ -10,4 +10,4 @@ cmake --build --preset <preset>
 cmake --install build_x64 --config RelWithDebInfo --prefix <destination>
 ```
 
-Replace the preset in the first two commands with `windows-x64`, `macos`, or `ubuntu-x86_64`. (I haven't actually built or tested anything other than Windows.) The configure step (first command) may have to be run twice becase CMake is stupid. The destination prefix in the install command can be omitted and it should theoretically install it to your OBS directory.
+Possible values for preset are: `windows-x64`, `macos`, and `ubuntu-x86_64`. (I haven't actually built or tested anything other than Windows.) The destination prefix in the install command can be omitted and it should theoretically install it to your OBS directory.

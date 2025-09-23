@@ -3,7 +3,7 @@
 #include "decoder.hpp"
 #include "socket.hpp"
 
-#include "protos/stream.pb.h"
+#include "stream.pb.h"
 
 #include <obs.h>
 
