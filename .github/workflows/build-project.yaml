@@ -119,7 +119,7 @@ jobs:
           append-timestamp: false
           restore-keys: |
             ${{ runner.os }}-${{ matrix.os }}-ccache-x86_64-
-          save: github.event_name != 'pull_request'
+          save: ${{ github.event_name != 'pull_request' }}
 
       - name: Set Up Codesigning 🔑
         uses: ./.github/actions/setup-macos-codesigning
@@ -205,7 +205,7 @@ jobs:
           append-timestamp: false
           restore-keys: |
             ${{ runner.os }}-${{ matrix.os }}-ccache-x86_64-
-          save: github.event_name != 'pull_request'
+          save: ${{ github.event_name != 'pull_request' }}
 
       - name: Build Plugin 🧱
         uses: ./.github/actions/build-plugin
@@ -259,7 +259,7 @@ jobs:
           append-timestamp: false
           restore-keys: |
             ${{ runner.os }}-${{ matrix.os }}-ccache-x86_64-
-          save: github.event_name != 'pull_request'
+          save: ${{ github.event_name != 'pull_request' }}
 
       - name: Set Up Environment 🔧
         id: setup
