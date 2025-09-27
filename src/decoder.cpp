@@ -192,8 +192,11 @@ bool decoder::get_frame(obs_source_frame& out_frame) {
 
     if (avcodec_receive_frame(context, hw_device_ctx ? hw_frame : frame) != 0)
         return false;
-    if (hw_device_ctx && av_hwframe_transfer_data(frame, hw_frame, 0) != 0)
-        return false;
+    if (hw_device_ctx) {
+        if (av_hwframe_transfer_data(frame, hw_frame, 0) != 0)
+            return false;
+        frame->pts = hw_frame->pts;
+    }
 
     for (int i = 0; i < MAX_AV_PLANES; i++) {
         out_frame.data[i] = frame->data[i];
