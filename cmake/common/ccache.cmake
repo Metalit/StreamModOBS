@@ -14,11 +14,22 @@ if(CCACHE_PROGRAM)
   option(ENABLE_CCACHE "Enable compiler acceleration with ccache" OFF)
 
   if(ENABLE_CCACHE)
-    set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
-    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
-    set(CMAKE_OBJC_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
-    set(CMAKE_OBJCXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
-    set(CMAKE_CUDA_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    if(OS_WINDOWS)
+      file(COPY_FILE ${CCACHE_PROGRAM} ${CMAKE_BINARY_DIR}/cl.exe ONLY_IF_DIFFERENT)
+      set(
+        CMAKE_VS_GLOBALS
+        "CLToolExe=cl.exe"
+        "CLToolPath=${CMAKE_BINARY_DIR}"
+        "UseMultiToolTask=true"
+        "DebugInformationFormat=OldStyle"
+      )
+    else()
+      set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+      set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+      set(CMAKE_OBJC_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+      set(CMAKE_OBJCXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+      set(CMAKE_CUDA_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    endif()
   endif()
 else()
   message(DEBUG "Trying to find ccache on build host - skipped")

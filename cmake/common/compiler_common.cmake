@@ -28,7 +28,7 @@ set(
   -Wswitch
   -Wno-unused-function
   -Wno-unused-label
-  -Wunused-parameter
+  -Wno-unused-parameter
   -Wunused-variable
   -Wunused-value
   -Wempty-body
@@ -42,7 +42,7 @@ set(
   -Wenum-conversion
   -Wnon-literal-null-conversion
   -Wsign-compare
-  -Wshorten-64-to-32
+  -Wno-shorten-64-to-32
   -Wpointer-sign
   -Wnewline-eof
   -Wno-implicit-fallthrough

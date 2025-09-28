@@ -2,9 +2,10 @@
 
 include_guard(GLOBAL)
 
+include(ccache)
 include(compiler_common)
 
-set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT ProgramDatabase)
+set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT Embedded)
 
 message(DEBUG "Current Windows API version: ${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION}")
 if(CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION_MAXIMUM)
@@ -32,6 +33,7 @@ add_compile_options(
   /wd4200
   /wd4244
   /wd4267
+  /wd4390
   /utf-8
   /Brepro
   /permissive-
