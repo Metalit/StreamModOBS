@@ -13,6 +13,7 @@ static constexpr auto PropMicThreshold = "micThreshold";
 static constexpr auto PropMicMix = "micMix";
 
 static constexpr auto PropAddress = "address";
+static constexpr auto PropBufferMs = "buffer";
 static constexpr auto PropResolution = "resolution";
 
 #include <array>

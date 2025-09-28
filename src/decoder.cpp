@@ -36,7 +36,7 @@ static void log_ffmpeg(void* ptr, int level, char const* fmt, va_list args) {
     int length = vsnprintf(out, sizeof(out), fmt, args);
     if (length <= sizeof(out))
         out[length - 1] = '\0';
-    obs_log(LOG_INFO, "[ffmpeg: %s] %s", level_str(level), out);
+    log_info("[ffmpeg: %s] %s", level_str(level), out);
 }
 #endif
 
@@ -107,7 +107,7 @@ static bool is_keyframe(std::string const& data) {
 decoder::decoder() {
     log_entry();
     if (LIBAVCODEC_VERSION_INT != avcodec_version())
-        obs_log(LOG_WARNING, "avcodec version mismatch! headers %d lib %d", LIBAVCODEC_VERSION_INT, avcodec_version());
+        log_warning("avcodec version mismatch! headers %d lib %d", LIBAVCODEC_VERSION_INT, avcodec_version());
 #ifdef DEBUG_LOGS
     av_log_set_callback(log_ffmpeg);
 #endif

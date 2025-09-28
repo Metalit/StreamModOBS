@@ -28,13 +28,44 @@ void bs_source::update_settings(obs_data_t* settings) {
             client.connect(address);
         else
             client.disconnect();
-        obs_log(LOG_INFO, "set connection to \"%s\"", current_address.c_str());
+        log_info("set connection to \"%s\"", current_address.c_str());
     } else
         send_settings();
 
+    data_buffer.set_starting_buffer((int) obs_data_get_int(data, PropBufferMs));
+
     cached_width = (int) obs_data_get_int(data, PropWidth);
     cached_height = (int) obs_data_get_int(data, PropHeight);
-    obs_log(LOG_INFO, "updated width/height to %dx%d", cached_width, cached_height);
+    log_info("updated width/height to %dx%d", cached_width, cached_height);
+}
+
+void bs_source::tick() {
+    if (!source)
+        return;
+
+    auto [video_frames, audio_frames] = get_buffer_data();
+
+    for (auto const& frame : audio_frames) {
+        obs_source_audio obs_audio;
+        obs_audio.format = AUDIO_FORMAT_FLOAT;
+        obs_audio.timestamp = frame.time();
+        obs_audio.samples_per_sec = frame.samplerate();
+        obs_audio.speakers = (speaker_layout) frame.channels();
+        obs_audio.data[0] = (uint8_t*) frame.data().data();  // leave as interleaved
+        obs_audio.frames = frame.data().size() / frame.channels();
+        obs_source_output_audio(source, &obs_audio);  // copies data
+    }
+
+    for (auto const& frame : video_frames) {
+        if (!video_decoder.valid())
+            video_decoder.init(AV_CODEC_ID_H264);
+        if (!video_decoder.queue(frame.data(), frame.time()))
+            return;
+    }
+
+    obs_source_frame obs_video;
+    while (video_decoder.get_frame(obs_video))
+        obs_source_output_video(source, &obs_video);
 }
 
 void bs_source::show() {
@@ -60,6 +91,7 @@ obs_properties_t* bs_source::get_properties() {
 
     obs_properties_set_flags(props, OBS_PROPERTIES_DEFER_UPDATE);
     obs_properties_add_text(props, PropAddress, "Quest Address", OBS_TEXT_DEFAULT);
+    obs_properties_add_int_slider(props, PropBufferMs, "Buffer Size (MS)", 0, 2000, 10);
 
     obs_property_t* resolution = obs_properties_add_list(props, PropResolution, "Resolution", OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
     for (int i = 0; i < Resolutions.size(); i++)
@@ -120,9 +152,10 @@ bool bs_source::update_custom_resolution(obs_properties_t* props) {
 }
 
 void bs_source::reset_playback() {
-    std::lock_guard lock(video_decoder_mutex);
+    std::lock_guard lock(data_buffer_mutex);
+    data_buffer.clear();
     video_decoder.reset();
-    obs_log(LOG_INFO, "reset video playback");
+    log_info("reset video playback");
 }
 
 void bs_source::on_socket_message(std::string const& message) {
@@ -174,7 +207,7 @@ void bs_source::send_settings() {
 }
 
 void bs_source::receive_settings(Settings const& settings) {
-    obs_log(LOG_INFO, "received new settings");
+    log_info("received new settings");
 
     if (!data)
         return;
@@ -206,25 +239,23 @@ void bs_source::receive_settings(Settings const& settings) {
 void bs_source::receive_video(VideoFrame const& video) {
     if (!source)
         return;
-    std::lock_guard lock(video_decoder_mutex);
-    if (!video_decoder.valid())
-        video_decoder.init(AV_CODEC_ID_H264);
-    if (!video_decoder.queue(video.data(), video.time()))
-        return;
-    obs_source_frame obs_video;
-    while (video_decoder.get_frame(obs_video))
-        obs_source_output_video(source, &obs_video);
+    std::lock_guard lock(data_buffer_mutex);
+    data_buffer.queue_video(video);
 }
 
 void bs_source::receive_audio(AudioFrame const& audio) {
     if (!source)
         return;
-    obs_source_audio obs_audio;
-    obs_audio.format = AUDIO_FORMAT_FLOAT;
-    obs_audio.timestamp = audio.time();
-    obs_audio.samples_per_sec = audio.samplerate();
-    obs_audio.speakers = (speaker_layout) audio.channels();
-    obs_audio.data[0] = (uint8_t*) audio.data().data();  // leave as interleaved
-    obs_audio.frames = audio.data().size() / audio.channels();
-    obs_source_output_audio(source, &obs_audio);  // copies audio data
+    std::lock_guard lock(data_buffer_mutex);
+    data_buffer.queue_audio(audio);
+}
+
+std::pair<std::vector<VideoFrame>, std::vector<AudioFrame>> bs_source::get_buffer_data() {
+    uint64_t time = os_gettime_ns();
+    std::lock_guard lock(data_buffer_mutex);
+    if (!data_buffer.has_data(time))
+        return {{}, {}};
+    auto video_frames = data_buffer.pop_video(time);
+    auto audio_frames = data_buffer.pop_audio(time);
+    return {video_frames, audio_frames};
 }

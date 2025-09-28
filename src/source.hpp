@@ -1,5 +1,6 @@
 #pragma once
 
+#include "buffer.hpp"
 #include "decoder.hpp"
 #include "socket.hpp"
 
@@ -7,14 +8,14 @@
 
 #include <obs.h>
 
-#include <queue>
-
 class bs_source {
    public:
     bs_source(obs_source_t* source, obs_data_t* settings);
     ~bs_source();
 
     void update_settings(obs_data_t* settings);
+
+    void tick();
 
     void show();
     void hide();
@@ -26,8 +27,9 @@ class bs_source {
 
    private:
     socket_manager client;
+    buffer data_buffer;
+    std::mutex data_buffer_mutex;
     decoder video_decoder;
-    std::mutex video_decoder_mutex;
 
     obs_source_t* source;
     obs_data_t* data;
@@ -50,4 +52,6 @@ class bs_source {
 
     void receive_video(VideoFrame const& video);
     void receive_audio(AudioFrame const& audio);
+
+    std::pair<std::vector<VideoFrame>, std::vector<AudioFrame>> get_buffer_data();
 };

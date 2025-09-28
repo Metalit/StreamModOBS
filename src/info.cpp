@@ -18,6 +18,26 @@ static void bs_destroy(void* data) {
     delete reinterpret_cast<bs_source*>(data);
 }
 
+static void bs_tick(void* data, float) {
+    reinterpret_cast<bs_source*>(data)->tick();
+}
+
+static void show_activate(void* data) {
+    reinterpret_cast<bs_source*>(data)->show();
+}
+
+static void hide(void* data) {
+    reinterpret_cast<bs_source*>(data)->hide();
+}
+
+static uint32_t get_width(void* data) {
+    return reinterpret_cast<bs_source*>(data)->get_width();
+}
+
+static uint32_t get_height(void* data) {
+    return reinterpret_cast<bs_source*>(data)->get_height();
+}
+
 static char const* get_name(void*) {
     log_entry();
     return "Standalone Beat Saber Stream";
@@ -44,23 +64,8 @@ static void get_defaults(obs_data_t* data) {
     obs_data_set_int(data, PropMicMix, 0);
 
     obs_data_set_string(data, PropAddress, "192.168.1.1:5555");
+    obs_data_set_int(data, PropBufferMs, 500);
     obs_data_set_int(data, PropResolution, 0);
-}
-
-static void show_activate(void* data) {
-    reinterpret_cast<bs_source*>(data)->show();
-}
-
-static void hide(void* data) {
-    reinterpret_cast<bs_source*>(data)->hide();
-}
-
-static uint32_t get_width(void* data) {
-    return reinterpret_cast<bs_source*>(data)->get_width();
-}
-
-static uint32_t get_height(void* data) {
-    return reinterpret_cast<bs_source*>(data)->get_height();
 }
 
 obs_source_info get_bs_source_info() {
@@ -72,13 +77,14 @@ obs_source_info get_bs_source_info() {
     source.create = bs_create;
     source.update = bs_update;
     source.destroy = bs_destroy;
+    source.video_tick = bs_tick;
     source.activate = show_activate;
     source.show = show_activate;
     source.hide = hide;
+    source.get_width = get_width;
+    source.get_height = get_height;
     source.get_name = get_name;
     source.get_properties = get_properties;
     // source.get_defaults = get_defaults;  // seems to reset every launch?
-    source.get_width = get_width;
-    source.get_height = get_height;
     return source;
 }

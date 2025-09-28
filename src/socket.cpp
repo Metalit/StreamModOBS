@@ -3,11 +3,11 @@
 
 #define CATCH_ASIO                                     \
       catch (std::exception const& e) {                \
-        obs_log(LOG_ERROR, "%s", e.what());            \
+        log_error("%s", e.what());            \
     } catch (websocketpp::lib::error_code e) {         \
-        obs_log(LOG_ERROR, "%s", e.message().data());  \
+        log_error("%s", e.message().data());  \
     } catch (...) {                                    \
-        obs_log(LOG_ERROR, "unknown websocket error"); \
+        log_error("unknown websocket error"); \
     }
 
 socket_manager::socket_manager() {
@@ -35,7 +35,7 @@ socket_manager::~socket_manager() {
 void socket_manager::connect(std::string const& address) {
     disconnect();
     try {
-        obs_log(LOG_INFO, "websocket connecting: ws://%s", address.c_str());
+        log_info("websocket connecting: ws://%s", address.c_str());
         websocketpp::lib::error_code error_code;
         client::connection_ptr connection = socket_client.get_connection("ws://" + address, error_code);
         if (error_code)
@@ -56,7 +56,7 @@ bool socket_manager::connected() {
 
 void socket_manager::disconnect() {
     try {
-        obs_log(LOG_INFO, "websocket disconnecting: %s", handle.has_value() ? "true" : "false");
+        log_info("websocket disconnecting: %s", handle.has_value() ? "true" : "false");
         if (handle)
             socket_client.close(*handle, websocketpp::close::status::going_away, "");
         connecting_handle.reset();
@@ -93,7 +93,7 @@ void socket_manager::on_open(websocketpp::connection_hdl hdl) {
         CATCH_ASIO;
         return;
     }
-    obs_log(LOG_INFO, "websocket opened");
+    log_info("websocket opened");
     connecting_handle.reset();
     if (handle)
         disconnect();
@@ -103,7 +103,7 @@ void socket_manager::on_open(websocketpp::connection_hdl hdl) {
 void socket_manager::on_fail(websocketpp::connection_hdl hdl) {
     if (!connecting_to(hdl))
         return;
-    obs_log(LOG_WARNING, "websocket failed");
+    log_warning("websocket failed");
     connecting_handle.reset();
 }
 
@@ -113,7 +113,7 @@ void socket_manager::on_message(websocketpp::connection_hdl hdl, client::message
 }
 
 void socket_manager::on_close(websocketpp::connection_hdl hdl) {
-    obs_log(LOG_INFO, "websocket closed");
+    log_info("websocket closed");
     if (close_callback)
         close_callback();
     handle.reset();
