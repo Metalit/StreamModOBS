@@ -34,6 +34,7 @@ add_compile_options(
   /wd4244
   /wd4267
   /wd4390
+  /wd5287
   /utf-8
   /Brepro
   /permissive-

@@ -35,8 +35,8 @@ find_package(FFmpeg REQUIRED COMPONENTS avcodec avutil)
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE FFmpeg::avcodec FFmpeg::avutil)
 
 # add plugin definitions and sources
-add_compile_definitions("PLUGIN_NAME=\"${CMAKE_PROJECT_NAME}\"")
-add_compile_definitions("PLUGIN_VERSION=\"${CMAKE_PROJECT_VERSION}\"")
+add_compile_definitions(PLUGIN_NAME="${CMAKE_PROJECT_NAME}")
+add_compile_definitions(PLUGIN_VERSION="${CMAKE_PROJECT_VERSION}")
 
 # add all cpp files in src as sources
 file(GLOB SRC_FILES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
