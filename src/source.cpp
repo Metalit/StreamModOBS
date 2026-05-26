@@ -24,7 +24,7 @@ void bs_source::update_settings(obs_data_t* settings) {
     std::string address = obs_data_get_string(data, PropAddress);
     if (address != current_address) {
         current_address = address;
-        if (!address.empty())
+        if (!address.empty() && obs_source_showing(source) && obs_source_active(source))
             client.connect(address);
         else
             client.disconnect();
