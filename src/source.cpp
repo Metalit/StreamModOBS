@@ -43,24 +43,30 @@ void bs_source::tick() {
     if (!source)
         return;
 
-    auto [video_frames, audio_frames] = get_buffer_data();
+    uint64_t time = os_gettime_ns();
+    {
+        std::lock_guard lock(data_buffer_mutex);
+        if (data_buffer.has_data(time)) {
+            while (auto frame = data_buffer.get_audio(time)) {
+                obs_source_audio obs_audio;
+                obs_audio.format = AUDIO_FORMAT_FLOAT;
+                obs_audio.timestamp = frame->time();
+                obs_audio.samples_per_sec = frame->samplerate();
+                obs_audio.speakers = (speaker_layout) frame->channels();
+                obs_audio.data[0] = (uint8_t*) frame->data().data();  // leave as interleaved
+                obs_audio.frames = frame->data().size() / frame->channels();
+                obs_source_output_audio(source, &obs_audio);  // copies data
+                data_buffer.pop_audio();
+            }
 
-    for (auto const& frame : audio_frames) {
-        obs_source_audio obs_audio;
-        obs_audio.format = AUDIO_FORMAT_FLOAT;
-        obs_audio.timestamp = frame.time();
-        obs_audio.samples_per_sec = frame.samplerate();
-        obs_audio.speakers = (speaker_layout) frame.channels();
-        obs_audio.data[0] = (uint8_t*) frame.data().data();  // leave as interleaved
-        obs_audio.frames = frame.data().size() / frame.channels();
-        obs_source_output_audio(source, &obs_audio);  // copies data
-    }
-
-    for (auto const& frame : video_frames) {
-        if (!video_decoder.valid())
-            video_decoder.init(AV_CODEC_ID_H264);
-        if (!video_decoder.queue(frame.data(), frame.time()))
-            return;
+            while (auto frame = data_buffer.get_video(time)) {
+                if (!video_decoder.valid())
+                    video_decoder.init(AV_CODEC_ID_H264);
+                if (video_decoder.queue(frame->data(), frame->time()) == decoder::again)
+                    break;  // try again later
+                data_buffer.pop_video();
+            }
+        }
     }
 
     obs_source_frame obs_video;
@@ -248,14 +254,4 @@ void bs_source::receive_audio(AudioFrame const& audio) {
         return;
     std::lock_guard lock(data_buffer_mutex);
     data_buffer.queue_audio(audio);
-}
-
-std::pair<std::vector<VideoFrame>, std::vector<AudioFrame>> bs_source::get_buffer_data() {
-    uint64_t time = os_gettime_ns();
-    std::lock_guard lock(data_buffer_mutex);
-    if (!data_buffer.has_data(time))
-        return {{}, {}};
-    auto video_frames = data_buffer.pop_video(time);
-    auto audio_frames = data_buffer.pop_audio(time);
-    return {video_frames, audio_frames};
 }

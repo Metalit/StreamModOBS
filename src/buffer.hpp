@@ -20,8 +20,10 @@ class buffer {
 
     bool has_data(uint64_t time);
 
-    std::vector<VideoFrame> pop_video(uint64_t time);
-    std::vector<AudioFrame> pop_audio(uint64_t time);
+    VideoFrame* get_video(uint64_t time);
+    void pop_video();
+    AudioFrame* get_audio(uint64_t time);
+    void pop_audio();
 
    private:
     std::deque<VideoFrame> video;

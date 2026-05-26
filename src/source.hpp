@@ -52,6 +52,4 @@ class bs_source {
 
     void receive_video(VideoFrame const& video);
     void receive_audio(AudioFrame const& audio);
-
-    std::pair<std::vector<VideoFrame>, std::vector<AudioFrame>> get_buffer_data();
 };

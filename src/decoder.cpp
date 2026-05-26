@@ -159,15 +159,19 @@ void decoder::reset() {
     got_keyframe = false;
 }
 
-bool decoder::queue(std::string const& data, uint64_t timestamp) {
+decoder::error decoder::queue(std::string const& data, uint64_t timestamp) {
     if (!valid())
-        return false;
+        return error::again;
     if (!got_sps) {
-        if (!(got_sps = is_sps(data)))
-            return false;
+        if (!(got_sps = is_sps(data))) {
+            log_debug("non-sps frame while waiting for sps");
+            return error::skip;
+        }
     } else if (!got_keyframe) {
-        if (!(got_keyframe = is_keyframe(data)))
-            return false;
+        if (!(got_keyframe = is_keyframe(data))) {
+            log_debug("non-keyframe frame while waiting for keyframe");
+            return error::skip;
+        }
     }
     // I think it might want both the sps and first keyframe in the same packet to avoid the "no frame" ffmpeg logs,
     // but well it's not like they break anything...
@@ -177,7 +181,14 @@ bool decoder::queue(std::string const& data, uint64_t timestamp) {
     packet->pts = timestamp;
     int err = avcodec_send_packet(context, packet);
     av_packet_free(&packet);
-    return err == 0;
+    switch (err) {
+        case 0:
+            return error::ok;
+        case AVERROR(EAGAIN):
+            return error::again;
+        default:
+            return error::skip;
+    }
 }
 
 bool decoder::get_frame(obs_source_frame& out_frame) {

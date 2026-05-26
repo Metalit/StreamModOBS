@@ -11,11 +11,11 @@ void buffer::set_starting_buffer(int ms) {
 }
 
 void buffer::queue_video(VideoFrame const& frame) {
-    video.emplace_back(std::move(frame));
+    video.emplace_back(frame);
 }
 
 void buffer::queue_audio(AudioFrame const& frame) {
-    audio.emplace_back(std::move(frame));
+    audio.emplace_back(frame);
 }
 
 void buffer::clear() {
@@ -36,34 +36,31 @@ bool buffer::has_data(uint64_t time) {
         calculate_offset(time);
     if (!has_data_with_offset(time)) {
         log_debug("ran out of data in buffer");
-        if (min_starting_buffer != 0)
-            clear();
-        else
-            calculated_offset = false;
+        calculated_offset = false;
+        time_offset = 0;
+        waiting_for_buffer = true;
     }
     return calculated_offset;
 }
 
-std::vector<VideoFrame> buffer::pop_video(uint64_t time) {
-    std::vector<VideoFrame> frames;
-    while (!video.empty() && video.front().time() + time_offset <= time) {
-        frames.emplace_back(std::move(video.front()));
-        video.pop_front();
-    }
-    if (frames.size() > 5)
-        log_debug("popped %lu video frames at once", frames.size());
-    return frames;
+VideoFrame* buffer::get_video(uint64_t time) {
+    if (!video.empty() && video.front().time() + time_offset <= time)
+        return &video.front();
+    return nullptr;
 }
 
-std::vector<AudioFrame> buffer::pop_audio(uint64_t time) {
-    std::vector<AudioFrame> frames;
-    while (!audio.empty() && audio.front().time() + time_offset <= time) {
-        frames.emplace_back(std::move(audio.front()));
-        audio.pop_front();
-    }
-    if (frames.size() > 5)
-        log_debug("popped %lu audio frames at once", frames.size());
-    return frames;
+void buffer::pop_video() {
+    video.pop_front();
+}
+
+AudioFrame* buffer::get_audio(uint64_t time) {
+    if (!audio.empty() && audio.front().time() + time_offset <= time)
+        return &audio.front();
+    return nullptr;
+}
+
+void buffer::pop_audio() {
+    audio.pop_front();
 }
 
 void buffer::calculate_offset(uint64_t time) {

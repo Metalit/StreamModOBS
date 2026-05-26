@@ -17,7 +17,13 @@ class decoder {
     bool valid();
     void reset();
 
-    bool queue(std::string const& data, uint64_t timestamp);
+    enum error {
+        ok,
+        again,
+        skip,
+    };
+
+    error queue(std::string const& data, uint64_t timestamp);
     bool get_frame(obs_source_frame& out_frame);
 
    private:

@@ -38,7 +38,7 @@ LineEnding: LF
 NamespaceIndentation: All
 PackConstructorInitializers: CurrentLine
 PenaltyExcessCharacter: 100
-PenaltyReturnTypeOnItsOwnLine: 0
+PenaltyReturnTypeOnItsOwnLine: 50
 QualifierAlignment: Right
 RequiresClausePosition: OwnLine
 RequiresExpressionIndentation: OuterScope
