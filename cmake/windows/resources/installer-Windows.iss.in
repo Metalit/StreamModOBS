@@ -1,0 +1,32 @@
+#define MyProjectName "@CMAKE_PROJECT_NAME@"
+#define MyAppName "@PLUGIN_DISPLAY_NAME@"
+#define MyAppVersion "@CMAKE_PROJECT_VERSION@"
+#define MyAppPublisher "@PLUGIN_AUTHOR@"
+#define MyAppURL "@PLUGIN_WEBSITE@"
+
+[Setup]
+; NOTE: The value of AppId uniquely identifies this application.
+; Do not use the same AppId value in installers for other applications.
+AppId=1636d828-b727-4f65-98b3-44913fb5dee6
+AppName={#MyAppName}
+AppVersion={#MyAppVersion}
+AppVerName={#MyAppName}
+AppPublisher={#MyAppPublisher}
+AppPublisherURL={#MyAppURL}
+; AppSupportURL={#MyAppURL}/help
+; AppUpdatesURL={#MyAppURL}/download
+DefaultDirName={commonappdata}\obs-studio\plugins\{#MyProjectName}
+UsePreviousAppDir=no
+DefaultGroupName={#MyAppName}
+OutputBaseFilename={#MyAppName}-{#MyAppVersion}-Windows-Installer
+Compression=lzma
+SolidCompression=yes
+DirExistsWarning=no
+RestartIfNeededByRun=no
+
+[Languages]
+Name: "english"; MessagesFile: "compiler:Default.isl"
+
+[Files]
+; NOTE: Do not use "Flags: ignoreversion" on any shared system files
+Source: "..\release\Package\{#MyProjectName}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
