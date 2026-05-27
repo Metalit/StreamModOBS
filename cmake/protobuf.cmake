@@ -10,6 +10,8 @@ cpmaddpackage(
   "CMAKE_INCLUDE_CURRENT_DIR FALSE"
   # it has a bunch of warnings, at least with MSVC - make sure it can still build
   "CMAKE_COMPILE_WARNING_AS_ERROR FALSE"
+  # also on mac there are deprecation issues (hopefully fixed in v36)
+  "CMAKE_XCODE_ATTRIBUTE_GCC_TREAT_WARNINGS_AS_ERRORS FALSE"
   "protobuf_BUILD_PROTOBUF_BINARIES ON"
   "protobuf_BUILD_TESTS OFF"
   "protobuf_MSVC_STATIC_RUNTIME OFF"

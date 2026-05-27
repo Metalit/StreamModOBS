@@ -20,7 +20,7 @@ socket_manager::socket_manager() {
     socket_client.set_message_handler(bind_mem(&socket_manager::on_message, this));
     socket_client.set_close_handler(bind_mem(&socket_manager::on_close, this));
 
-    run_thread = std::move(std::thread(bind_mem(&client::run, &socket_client)));
+    run_thread = std::thread(bind_mem(&client::run, &socket_client));
 }
 
 socket_manager::~socket_manager() {
