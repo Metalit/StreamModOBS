@@ -43,6 +43,8 @@ if (( ! (${skips[(Ie)all]} + ${skips[(Ie)deps]}) )) {
     libgles2-mesa-dev \
     libsimde-dev \
     obs-studio \
+    libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev \
+    libavutil-dev libswresample-dev libswscale-dev \
     libasio-dev \
     libwebsocketpp-dev
 
