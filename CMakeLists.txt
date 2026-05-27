@@ -44,8 +44,8 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${SRC_FILES})
 
 # configure installer (https://github.com/obsproject/obs-plugintemplate/wiki/Create-an-InnoSetup-Installer)
 configure_file(
-    cmake/windows/resources/installer-Windows.iss.in
-    "${CMAKE_CURRENT_BINARY_DIR}/installer-Windows.generated.iss"
+  cmake/windows/resources/installer-Windows.iss.in
+  "${CMAKE_CURRENT_BINARY_DIR}/installer-Windows.generated.iss"
 )
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})
