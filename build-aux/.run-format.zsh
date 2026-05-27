@@ -135,7 +135,7 @@ invoke_formatter() {
         }
       }
       ;;
-    *) log_error "Invalid formatter specified: ${1}. Valid options are clang-format, gersemi, and swift-format."; exit 2 ;;
+    *) log_error "Invalid formatter specified: ${1}. Valid options are clang-format and gersemi."; exit 2 ;;
   }
 
 
