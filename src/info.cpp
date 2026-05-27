@@ -40,7 +40,7 @@ static uint32_t get_height(void* data) {
 
 static char const* get_name(void*) {
     log_entry();
-    return "Standalone Beat Saber Stream";
+    return get_str("source.name");
 }
 
 static obs_properties_t* get_properties(void* data) {

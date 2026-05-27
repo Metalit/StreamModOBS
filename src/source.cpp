@@ -96,13 +96,14 @@ obs_properties_t* bs_source::get_properties() {
     obs_properties_t* props = obs_properties_create();
 
     obs_properties_set_flags(props, OBS_PROPERTIES_DEFER_UPDATE);
-    obs_properties_add_text(props, PropAddress, "Quest Address", OBS_TEXT_DEFAULT);
-    obs_properties_add_int_slider(props, PropBufferMs, "Buffer Size (MS)", 0, 2000, 10);
+    obs_properties_add_text(props, PropAddress, get_str("props.addr"), OBS_TEXT_DEFAULT);
+    obs_properties_add_int_slider(props, PropBufferMs, get_str("props.buffer"), 0, 2000, 10);
 
-    obs_property_t* resolution = obs_properties_add_list(props, PropResolution, "Resolution", OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+    obs_property_t* resolution =
+        obs_properties_add_list(props, PropResolution, get_str("props.resolution"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
     for (int i = 0; i < Resolutions.size(); i++)
         obs_property_list_add_int(resolution, Resolutions[i], i);
-    obs_property_list_add_int(resolution, "Custom", Resolutions.size());
+    obs_property_list_add_int(resolution, get_str("props.custom_res"), Resolutions.size());
     obs_property_set_modified_callback2(
         resolution,
         [](void* data, obs_properties_t* props, obs_property_t*, obs_data_t*) {
@@ -111,23 +112,23 @@ obs_properties_t* bs_source::get_properties() {
         this
     );
 
-    obs_property_t* width = obs_properties_add_int(props, PropWidth, "Custom Width", 1, 4096, 1);
-    obs_property_t* height = obs_properties_add_int(props, PropHeight, "Custom Height", 1, 4096, 1);
+    obs_property_t* width = obs_properties_add_int(props, PropWidth, get_str("props.custom_width"), 1, 4096, 1);
+    obs_property_t* height = obs_properties_add_int(props, PropHeight, get_str("props.custom_height"), 1, 4096, 1);
     obs_property_set_visible(width, custom_resolution_shown);
     obs_property_set_visible(height, custom_resolution_shown);
 
-    obs_properties_add_int_slider(props, PropBitrate, "Bitrate (kbps)", 1000, 20000, 1000);
-    obs_properties_add_float_slider(props, PropFPS, "FPS", 10, 90, 5);
-    obs_properties_add_float_slider(props, PropFOV, "FOV", 50, 100, 1);
-    obs_properties_add_float_slider(props, PropSmoothness, "Smoothness", 0, 2, 0.1);
+    obs_properties_add_int_slider(props, PropBitrate, get_str("props.bitrate"), 1000, 20000, 1000);
+    obs_properties_add_float_slider(props, PropFPS, get_str("props.fps"), 10, 90, 5);
+    obs_properties_add_float_slider(props, PropFOV, get_str("props.fov"), 50, 100, 1);
+    obs_properties_add_float_slider(props, PropSmoothness, get_str("props.smoothness"), 0, 2, 0.1);
 
-    obs_properties_add_bool(props, PropMicrophone, "Microphone");
+    obs_properties_add_bool(props, PropMicrophone, get_str("props.mic"));
 
-    obs_properties_add_float_slider(props, PropGameVolume, "Game Volume", 0, 2, 0.1);
-    obs_properties_add_float_slider(props, PropMicVolume, "Microphone Volume", 0, 2, 0.1);
-    obs_properties_add_float_slider(props, PropMicThreshold, "Microphone Threshold", 0, 2, 0.1);
+    obs_properties_add_float_slider(props, PropGameVolume, get_str("props.game_vol"), 0, 2, 0.1);
+    obs_properties_add_float_slider(props, PropMicVolume, get_str("props.mic_vol"), 0, 2, 0.1);
+    obs_properties_add_float_slider(props, PropMicThreshold, get_str("props.mic_threshold"), 0, 2, 0.1);
 
-    obs_property_t* micMix = obs_properties_add_list(props, PropMicMix, "Microphone Mixing", OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+    obs_property_t* micMix = obs_properties_add_list(props, PropMicMix, get_str("props.mic_mix"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
     for (int i = 0; i < MicMixes.size(); i++)
         obs_property_list_add_int(micMix, MicMixes[i], i);
 

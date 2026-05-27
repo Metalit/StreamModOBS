@@ -16,3 +16,7 @@ extern "C" bool obs_module_load(void) {
 extern "C" void obs_module_unload(void) {
     log_info("plugin unloaded");
 }
+
+char const* get_str(char const* key) {
+    return obs_module_text(key);
+}
