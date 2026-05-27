@@ -14,7 +14,7 @@ set(
   -fno-strict-aliasing
   -fopenmp-simd
   -Wdeprecated-declarations
-  -Wempty-body
+  -Wno-empty-body
   -Wenum-conversion
   -Werror=return-type
   -Wextra
@@ -41,7 +41,7 @@ set(
 )
 
 add_compile_options(
-  -fopenmp-simd
+  -fopenmp-simd -fPIC
   "$<$<COMPILE_LANG_AND_ID:C,GNU>:${_obs_gcc_c_options}>"
   "$<$<COMPILE_LANG_AND_ID:C,GNU>:-Wint-conversion;-Wno-missing-prototypes;-Wno-strict-prototypes;-Wpointer-sign>"
   "$<$<COMPILE_LANG_AND_ID:CXX,GNU>:${_obs_gcc_c_options}>"

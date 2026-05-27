@@ -107,12 +107,12 @@ void socket_manager::on_fail(websocketpp::connection_hdl hdl) {
     connecting_handle.reset();
 }
 
-void socket_manager::on_message(websocketpp::connection_hdl hdl, client::message_ptr msg) {
+void socket_manager::on_message(websocketpp::connection_hdl, client::message_ptr msg) {
     if (message_callback)
         message_callback(msg->get_payload());
 }
 
-void socket_manager::on_close(websocketpp::connection_hdl hdl) {
+void socket_manager::on_close(websocketpp::connection_hdl) {
     log_info("websocket closed");
     if (close_callback)
         close_callback();

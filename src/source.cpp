@@ -101,7 +101,7 @@ obs_properties_t* bs_source::get_properties() {
 
     obs_property_t* resolution =
         obs_properties_add_list(props, PropResolution, get_str("props.resolution"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-    for (int i = 0; i < Resolutions.size(); i++)
+    for (size_t i = 0; i < Resolutions.size(); i++)
         obs_property_list_add_int(resolution, Resolutions[i], i);
     obs_property_list_add_int(resolution, get_str("props.custom_res"), Resolutions.size());
     obs_property_set_modified_callback2(
@@ -129,7 +129,7 @@ obs_properties_t* bs_source::get_properties() {
     obs_properties_add_float_slider(props, PropMicThreshold, get_str("props.mic_threshold"), 0, 2, 0.1);
 
     obs_property_t* micMix = obs_properties_add_list(props, PropMicMix, get_str("props.mic_mix"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-    for (int i = 0; i < MicMixes.size(); i++)
+    for (size_t i = 0; i < MicMixes.size(); i++)
         obs_property_list_add_int(micMix, MicMixes[i], i);
 
     return props;
@@ -236,7 +236,7 @@ void bs_source::receive_settings(Settings const& settings) {
     obs_data_set_int(data, PropMicMix, settings.micmix());
 
     size_t resolution = Resolutions.size();
-    for (int i = 0; i < Resolutions.size(); i++) {
+    for (size_t i = 0; i < Resolutions.size(); i++) {
         if (cached_width == ResolutionValues[i].first && cached_height == ResolutionValues[i].second)
             resolution = i;
     }
