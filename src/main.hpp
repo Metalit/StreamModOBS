@@ -13,7 +13,7 @@ char const* get_str(char const* key);
 
 #include <util/base.h>
 
-#define DEBUG_LOGS
+// #define DEBUG_LOGS
 
 #define log_level(level, ...) \
     blog(level, "[" PLUGIN_NAME "] " __VA_ARGS__)
