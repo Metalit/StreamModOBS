@@ -40,6 +40,11 @@ class bs_source {
 
     bool custom_resolution_shown = false;
 
+    std::optional<CameraSettings> camera_settings;
+
+    int cached_samplerate = -1;
+    int cached_channels = -1;
+
     bool update_custom_resolution(obs_properties_t* props);
 
     void reset_playback();
@@ -48,7 +53,8 @@ class bs_source {
     void on_socket_close();
 
     void send_settings();
-    void receive_settings(Settings const& settings);
+    void receive_video_settings(VideoSettings const& settings);
+    void receive_audio_settings(AudioSettings const& settings);
 
     void receive_video(VideoFrame const& video);
     void receive_audio(AudioFrame const& audio);

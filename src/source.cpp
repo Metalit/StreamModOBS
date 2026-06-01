@@ -40,7 +40,7 @@ void bs_source::update_settings(obs_data_t* settings) {
 }
 
 void bs_source::tick() {
-    if (!source)
+    if (!source || cached_channels < 0)
         return;
 
     uint64_t time = os_gettime_ns();
@@ -51,10 +51,10 @@ void bs_source::tick() {
                 obs_source_audio obs_audio;
                 obs_audio.format = AUDIO_FORMAT_FLOAT;
                 obs_audio.timestamp = frame->time();
-                obs_audio.samples_per_sec = frame->samplerate();
-                obs_audio.speakers = (speaker_layout) frame->channels();
+                obs_audio.samples_per_sec = cached_samplerate;
+                obs_audio.speakers = (speaker_layout) cached_channels;
                 obs_audio.data[0] = (uint8_t*) frame->data().data();  // leave as interleaved
-                obs_audio.frames = frame->data().size() / frame->channels();
+                obs_audio.frames = frame->data().size() / cached_channels;
                 obs_source_output_audio(source, &obs_audio);  // copies data
                 data_buffer.pop_audio();
             }
@@ -99,11 +99,10 @@ obs_properties_t* bs_source::get_properties() {
     obs_properties_add_text(props, PropAddress, get_str("props.addr"), OBS_TEXT_DEFAULT);
     obs_properties_add_int_slider(props, PropBufferMs, get_str("props.buffer"), 0, 2000, 10);
 
-    obs_property_t* resolution =
-        obs_properties_add_list(props, PropResolution, get_str("props.resolution"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+    obs_property_t* resolution = obs_properties_add_list(props, PropResolution, get_str("props.res"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
     for (size_t i = 0; i < Resolutions.size(); i++)
-        obs_property_list_add_int(resolution, Resolutions[i], i);
-    obs_property_list_add_int(resolution, get_str("props.custom_res"), Resolutions.size());
+        obs_property_list_add_int(resolution, get_str(Resolutions[i]), i);
+    obs_property_list_add_int(resolution, get_str("res.custom"), Resolutions.size());
     obs_property_set_modified_callback2(
         resolution,
         [](void* data, obs_properties_t* props, obs_property_t*, obs_data_t*) {
@@ -118,19 +117,15 @@ obs_properties_t* bs_source::get_properties() {
     obs_property_set_visible(height, custom_resolution_shown);
 
     obs_properties_add_int_slider(props, PropBitrate, get_str("props.bitrate"), 1000, 20000, 1000);
-    obs_properties_add_float_slider(props, PropFPS, get_str("props.fps"), 10, 90, 5);
-    obs_properties_add_float_slider(props, PropFOV, get_str("props.fov"), 50, 100, 1);
-    obs_properties_add_float_slider(props, PropSmoothness, get_str("props.smoothness"), 0, 2, 0.1);
-
-    obs_properties_add_bool(props, PropMicrophone, get_str("props.mic"));
 
     obs_properties_add_float_slider(props, PropGameVolume, get_str("props.game_vol"), 0, 2, 0.1);
+    obs_properties_add_bool(props, PropMicrophone, get_str("props.mic"));
     obs_properties_add_float_slider(props, PropMicVolume, get_str("props.mic_vol"), 0, 2, 0.1);
     obs_properties_add_float_slider(props, PropMicThreshold, get_str("props.mic_threshold"), 0, 2, 0.1);
 
     obs_property_t* micMix = obs_properties_add_list(props, PropMicMix, get_str("props.mic_mix"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
     for (size_t i = 0; i < MicMixes.size(); i++)
-        obs_property_list_add_int(micMix, MicMixes[i], i);
+        obs_property_list_add_int(micMix, get_str(MicMixes[i]), i);
 
     return props;
 }
@@ -169,11 +164,21 @@ void bs_source::on_socket_message(std::string const& message) {
     PacketWrapper packet;
     packet.ParseFromString(message);
     switch (packet.Packet_case()) {
-        case PacketWrapper::kSettings:
-            receive_settings(packet.settings());
+        case PacketWrapper::kVideoSettings:
+            receive_video_settings(packet.videosettings());
+            break;
+        case PacketWrapper::kAudioSettings:
+            receive_audio_settings(packet.audiosettings());
+            break;
+        case PacketWrapper::kCameraSettings:
+            camera_settings = packet.camerasettings();
             break;
         case PacketWrapper::kVideoFrame:
             receive_video(packet.videoframe());
+            break;
+        case PacketWrapper::kAudioConfig:
+            cached_samplerate = packet.audioconfig().samplerate();
+            cached_channels = packet.audioconfig().channels();
             break;
         case PacketWrapper::kAudioFrame:
             receive_audio(packet.audioframe());
@@ -194,27 +199,38 @@ void bs_source::send_settings() {
     if (!data)
         return;
 
-    PacketWrapper packet;
-    auto& settings = *packet.mutable_settings();
-    settings.set_horizontal((int) obs_data_get_int(data, PropWidth));
-    settings.set_vertical((int) obs_data_get_int(data, PropHeight));
-    settings.set_bitrate((int) obs_data_get_int(data, PropBitrate));
-    settings.set_fps((float) obs_data_get_double(data, PropFPS));
-    settings.set_fov((float) obs_data_get_double(data, PropFOV));
-    settings.set_smoothness((float) obs_data_get_double(data, PropSmoothness));
-    settings.set_mic(obs_data_get_bool(data, PropMicrophone));
-    settings.set_fpfc(false);
-    settings.set_gamevolume((float) obs_data_get_double(data, PropGameVolume));
-    settings.set_micvolume((float) obs_data_get_double(data, PropMicVolume));
-    settings.set_micthreshold((float) obs_data_get_double(data, PropMicThreshold));
-    settings.set_micmix((int) obs_data_get_int(data, PropMicMix));
-    client.send(packet.SerializeAsString());
-
-    reset_playback();
+    {
+        PacketWrapper packet;
+        auto& settings = *packet.mutable_videosettings();
+        settings.set_horizontal((int) obs_data_get_int(data, PropWidth));
+        settings.set_vertical((int) obs_data_get_int(data, PropHeight));
+        settings.set_bitrate((int) obs_data_get_int(data, PropBitrate));
+        client.send(packet.SerializeAsString());
+        reset_playback();
+    }
+    {
+        PacketWrapper packet;
+        auto& settings = *packet.mutable_audiosettings();
+        settings.set_gamevolume((float) obs_data_get_double(data, PropGameVolume));
+        settings.set_mic(obs_data_get_bool(data, PropMicrophone));
+        settings.set_micvolume((float) obs_data_get_double(data, PropMicVolume));
+        settings.set_micthreshold((float) obs_data_get_double(data, PropMicThreshold));
+        settings.set_micmix((AudioSettings::MicMix) obs_data_get_int(data, PropMicMix));
+        client.send(packet.SerializeAsString());
+    }
+    {
+        PacketWrapper packet;
+        auto& settings = *packet.mutable_camerasettings();
+        settings = *camera_settings;
+        auto& position = *settings.mutable_position();
+        if (position.cameramode() == CameraSettings::Position::FPFC)
+            position.set_cameramode(CameraSettings::Position::Smooth);
+        client.send(packet.SerializeAsString());
+    }
 }
 
-void bs_source::receive_settings(Settings const& settings) {
-    log_info("received new settings");
+void bs_source::receive_video_settings(VideoSettings const& settings) {
+    log_info("received new video settings");
 
     if (!data)
         return;
@@ -226,14 +242,6 @@ void bs_source::receive_settings(Settings const& settings) {
     obs_data_set_int(data, PropWidth, cached_width);
     obs_data_set_int(data, PropHeight, cached_height);
     obs_data_set_int(data, PropBitrate, settings.bitrate());
-    obs_data_set_double(data, PropFPS, settings.fps());
-    obs_data_set_double(data, PropFOV, settings.fov());
-    obs_data_set_double(data, PropSmoothness, settings.smoothness());
-    obs_data_set_bool(data, PropMicrophone, settings.mic());
-    obs_data_set_double(data, PropGameVolume, settings.gamevolume());
-    obs_data_set_double(data, PropMicVolume, settings.micvolume());
-    obs_data_set_double(data, PropMicThreshold, settings.micthreshold());
-    obs_data_set_int(data, PropMicMix, settings.micmix());
 
     size_t resolution = Resolutions.size();
     for (size_t i = 0; i < Resolutions.size(); i++) {
@@ -241,6 +249,19 @@ void bs_source::receive_settings(Settings const& settings) {
             resolution = i;
     }
     obs_data_set_int(data, PropResolution, resolution);
+}
+
+void bs_source::receive_audio_settings(AudioSettings const& settings) {
+    log_info("received new audio settings");
+
+    if (!data)
+        return;
+
+    obs_data_set_double(data, PropGameVolume, settings.gamevolume());
+    obs_data_set_bool(data, PropMicrophone, settings.mic());
+    obs_data_set_double(data, PropMicVolume, settings.micvolume());
+    obs_data_set_double(data, PropMicThreshold, settings.micthreshold());
+    obs_data_set_int(data, PropMicMix, settings.micmix());
 }
 
 void bs_source::receive_video(VideoFrame const& video) {

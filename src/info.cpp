@@ -51,21 +51,19 @@ static obs_properties_t* get_properties(void* data) {
 }
 
 static void get_defaults(obs_data_t* data) {
-    obs_data_set_int(data, PropWidth, 1280);
-    obs_data_set_int(data, PropHeight, 720);
+    obs_data_set_string(data, PropAddress, "192.168.0.1:3308");
+    obs_data_set_int(data, PropBufferMs, 500);
+
+    obs_data_set_int(data, PropResolution, 0);
+    obs_data_set_int(data, PropWidth, ResolutionValues[0].first);
+    obs_data_set_int(data, PropHeight, ResolutionValues[0].second);
     obs_data_set_int(data, PropBitrate, 10000);
-    obs_data_set_double(data, PropFPS, 60);
-    obs_data_set_double(data, PropFOV, 65);
-    obs_data_set_double(data, PropSmoothness, 1);
-    obs_data_set_bool(data, PropMicrophone, false);
+
     obs_data_set_double(data, PropGameVolume, 1);
+    obs_data_set_bool(data, PropMicrophone, false);
     obs_data_set_double(data, PropMicVolume, 1);
     obs_data_set_double(data, PropMicThreshold, 1);
     obs_data_set_int(data, PropMicMix, 0);
-
-    obs_data_set_string(data, PropAddress, "192.168.1.1:5555");
-    obs_data_set_int(data, PropBufferMs, 500);
-    obs_data_set_int(data, PropResolution, 0);
 }
 
 obs_source_info get_bs_source_info() {

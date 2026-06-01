@@ -1,25 +1,22 @@
 #pragma once
 
-static constexpr auto PropWidth = "width";
-static constexpr auto PropHeight = "height";
-static constexpr auto PropBitrate = "bitrate";
-static constexpr auto PropFPS = "fps";
-static constexpr auto PropFOV = "fov";
-static constexpr auto PropSmoothness = "smoothness";
-static constexpr auto PropMicrophone = "mic";
-static constexpr auto PropGameVolume = "gameVolume";
-static constexpr auto PropMicVolume = "micVolume";
-static constexpr auto PropMicThreshold = "micThreshold";
-static constexpr auto PropMicMix = "micMix";
+inline constexpr auto PropAddress = "address";
+inline constexpr auto PropBufferMs = "buffer";
 
-static constexpr auto PropAddress = "address";
-static constexpr auto PropBufferMs = "buffer";
-static constexpr auto PropResolution = "resolution";
+inline constexpr auto PropResolution = "resolution";
+inline constexpr auto PropWidth = "width";
+inline constexpr auto PropHeight = "height";
+inline constexpr auto PropBitrate = "bitrate";
+
+inline constexpr auto PropGameVolume = "gameVolume";
+inline constexpr auto PropMicrophone = "mic";
+inline constexpr auto PropMicVolume = "micVolume";
+inline constexpr auto PropMicThreshold = "micThreshold";
+inline constexpr auto PropMicMix = "micMix";
 
 #include <array>
+#include <utility>
 
-static std::array<char const*, 3> inline const Resolutions = {"720p", "1080p", "1440p"};
-// not sure what's wrong with array for this one
-static std::pair<int, int> inline const ResolutionValues[] = {{1280, 720}, {1920, 1080}, {2560, 1440}};
-
-static std::array<char const*, 3> inline const MicMixes = {"Combine", "Duck", "Add"};
+inline constexpr std::array ResolutionValues = {std::make_pair(1280, 720), std::make_pair(1920, 1080), std::make_pair(2560, 1440)};
+inline constexpr std::array Resolutions = {"res.720", "res.1080", "res.1440"};
+inline constexpr std::array MicMixes = {"mic_mix.combine", "mic_mix.duck", "mic_mix.add"};
