@@ -146,6 +146,12 @@ bool decoder::valid() {
     return context;
 }
 
+int decoder::delay() {
+    if (!valid())
+        return 0;
+    return context->delay;
+}
+
 void decoder::reset() {
     if (context)
         avcodec_free_context(&context);
@@ -157,6 +163,7 @@ void decoder::reset() {
         av_frame_free(&hw_frame);
     got_sps = false;
     got_keyframe = false;
+    frame_waiting = false;
 }
 
 decoder::error decoder::queue(std::string const& data, uint64_t timestamp) {
@@ -191,23 +198,16 @@ decoder::error decoder::queue(std::string const& data, uint64_t timestamp) {
     }
 }
 
-bool decoder::get_frame(obs_source_frame& out_frame) {
-    if (!valid())
+bool decoder::has_frame(uint64_t timestamp) {
+    if (!receive_frame())
         return false;
-    if (!frame)
-        frame = av_frame_alloc();
-    if (hw_device_ctx && !hw_frame)
-        hw_frame = av_frame_alloc();
-    if (!frame || (hw_device_ctx && !hw_frame))
-        return false;
+    return (uint64_t) frame->pts <= timestamp;
+}
 
-    if (avcodec_receive_frame(context, hw_device_ctx ? hw_frame : frame) != 0)
+bool decoder::get_frame(obs_source_frame& out_frame) {
+    if (!receive_frame())
         return false;
-    if (hw_device_ctx) {
-        if (av_hwframe_transfer_data(frame, hw_frame, 0) != 0)
-            return false;
-        frame->pts = hw_frame->pts;
-    }
+    frame_waiting = false;
 
     for (int i = 0; i < MAX_AV_PLANES; i++) {
         out_frame.data[i] = frame->data[i];
@@ -225,4 +225,27 @@ bool decoder::get_frame(obs_source_frame& out_frame) {
         VIDEO_CS_DEFAULT, VIDEO_RANGE_PARTIAL, out_frame.format, out_frame.color_matrix, out_frame.color_range_min, out_frame.color_range_max
     );
     // not sure about max_luminance or trc
+}
+
+bool decoder::receive_frame() {
+    if (!valid())
+        return false;
+    if (!frame)
+        frame = av_frame_alloc();
+    if (hw_device_ctx && !hw_frame)
+        hw_frame = av_frame_alloc();
+    if (!frame || (hw_device_ctx && !hw_frame))
+        return false;
+    if (frame_waiting)
+        return true;
+
+    if (avcodec_receive_frame(context, hw_device_ctx ? hw_frame : frame) != 0)
+        return false;
+    if (hw_device_ctx) {
+        if (av_hwframe_transfer_data(frame, hw_frame, 0) != 0)
+            return false;
+        frame->pts = hw_frame->pts;
+    }
+    frame_waiting = true;
+    return true;
 }

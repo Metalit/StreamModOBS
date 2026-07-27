@@ -44,7 +44,7 @@ bool buffer::has_data(uint64_t time) {
 }
 
 VideoFrame* buffer::get_video(uint64_t time) {
-    if (!video.empty() && video.front().time() + time_offset <= time)
+    if (!video.empty() && offset_time(video.front().time()) <= time)
         return &video.front();
     return nullptr;
 }
@@ -54,7 +54,7 @@ void buffer::pop_video() {
 }
 
 AudioFrame* buffer::get_audio(uint64_t time) {
-    if (!audio.empty() && audio.front().time() + time_offset <= time)
+    if (!audio.empty() && offset_time(audio.front().time()) <= time)
         return &audio.front();
     return nullptr;
 }
@@ -76,9 +76,9 @@ void buffer::calculate_offset(uint64_t time) {
 bool buffer::has_data_with_offset(uint64_t time) {
     if (video.empty() || audio.empty())
         return false;
-    if (video.back().time() + time_offset < time)
+    if (offset_time(video.back().time()) < time)
         return false;
-    if (audio.back().time() + time_offset < time)
+    if (offset_time(audio.back().time()) < time)
         return false;
     return true;
 }

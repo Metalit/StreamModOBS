@@ -19,6 +19,7 @@ class buffer {
     void clear();
 
     bool has_data(uint64_t time);
+    uint64_t offset_time(uint64_t time) { return time + time_offset; }
 
     VideoFrame* get_video(uint64_t time);
     void pop_video();

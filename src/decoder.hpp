@@ -15,6 +15,7 @@ class decoder {
 
     bool init(AVCodecID codec_id, bool try_hw = true);
     bool valid();
+    int delay();
     void reset();
 
     enum error {
@@ -24,6 +25,7 @@ class decoder {
     };
 
     error queue(std::string const& data, uint64_t timestamp);
+    bool has_frame(uint64_t timestamp);
     bool get_frame(obs_source_frame& out_frame);
 
    private:
@@ -35,4 +37,7 @@ class decoder {
     AVFrame* frame = NULL;
     bool got_sps = false;
     bool got_keyframe = false;
+    bool frame_waiting = false;
+
+    bool receive_frame();
 };

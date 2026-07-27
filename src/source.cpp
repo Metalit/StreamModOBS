@@ -44,34 +44,44 @@ void bs_source::tick() {
         return;
 
     uint64_t time = os_gettime_ns();
-    {
-        std::lock_guard lock(data_buffer_mutex);
-        if (data_buffer.has_data(time)) {
-            while (auto frame = data_buffer.get_audio(time)) {
-                obs_source_audio obs_audio;
-                obs_audio.format = AUDIO_FORMAT_FLOAT;
-                obs_audio.timestamp = frame->time();
-                obs_audio.samples_per_sec = cached_samplerate;
-                obs_audio.speakers = (speaker_layout) cached_channels;
-                obs_audio.data[0] = (uint8_t*) frame->data().data();  // leave as interleaved
-                obs_audio.frames = frame->data().size() / cached_channels;
-                obs_source_output_audio(source, &obs_audio);  // copies data
-                data_buffer.pop_audio();
-            }
-
-            while (auto frame = data_buffer.get_video(time)) {
-                if (!video_decoder.valid())
-                    video_decoder.init(AV_CODEC_ID_H264);
-                if (video_decoder.queue(frame->data(), frame->time()) == decoder::again)
-                    break;  // try again later
-                data_buffer.pop_video();
-            }
-        }
-    }
 
     obs_source_frame obs_video;
-    while (video_decoder.get_frame(obs_video))
-        obs_source_output_video(source, &obs_video);
+    while (video_decoder.has_frame(time) && video_decoder.get_frame(obs_video))
+        obs_source_output_video(source, &obs_video);  // copies data
+
+    std::lock_guard lock(data_buffer_mutex);
+
+    if (!data_buffer.has_data(time)) {
+        video_decoder.reset();
+        obs_source_output_video(source, NULL);
+        return;
+    }
+
+    if (!video_decoder.valid())
+        video_decoder.init(AV_CODEC_ID_H264, true);
+
+    // try to keep the decoder buffer full enough that we have synced video to output for the next timestamp
+    uint64_t frames_time_ahead = 10 * 1000000;  // 10ms
+    if (camera_settings)
+        frames_time_ahead += video_decoder.delay() * (1000000000 / camera_settings->fps());
+
+    while (auto frame = data_buffer.get_video(time + frames_time_ahead)) {
+        if (video_decoder.queue(frame->data(), data_buffer.offset_time(frame->time())) == decoder::again)
+            break;  // decoder is full
+        data_buffer.pop_video();
+    }
+
+    while (auto frame = data_buffer.get_audio(time)) {
+        obs_source_audio obs_audio;
+        obs_audio.format = AUDIO_FORMAT_FLOAT;
+        obs_audio.timestamp = frame->time();
+        obs_audio.samples_per_sec = cached_samplerate;
+        obs_audio.speakers = (speaker_layout) cached_channels;
+        obs_audio.data[0] = (uint8_t*) frame->data().data();  // leave as interleaved
+        obs_audio.frames = frame->data().size() / cached_channels;
+        obs_source_output_audio(source, &obs_audio);  // copies data
+        data_buffer.pop_audio();
+    }
 }
 
 void bs_source::show() {
@@ -154,6 +164,8 @@ bool bs_source::update_custom_resolution(obs_properties_t* props) {
 }
 
 void bs_source::reset_playback() {
+    if (source)
+        obs_source_output_video(source, NULL);
     std::lock_guard lock(data_buffer_mutex);
     data_buffer.clear();
     video_decoder.reset();
