@@ -51,11 +51,8 @@ void bs_source::tick() {
 
     std::lock_guard lock(data_buffer_mutex);
 
-    if (!data_buffer.has_data(time)) {
-        video_decoder.reset();
-        obs_source_output_video(source, NULL);
+    if (!data_buffer.has_data(time))
         return;
-    }
 
     if (!video_decoder.valid())
         video_decoder.init(AV_CODEC_ID_H264, true);
@@ -164,8 +161,6 @@ bool bs_source::update_custom_resolution(obs_properties_t* props) {
 }
 
 void bs_source::reset_playback() {
-    if (source)
-        obs_source_output_video(source, NULL);
     std::lock_guard lock(data_buffer_mutex);
     data_buffer.clear();
     video_decoder.reset();
